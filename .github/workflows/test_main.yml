@@ -1,10 +1,10 @@
-name: Python Tests
+name: Python Tests and Auto Merge
 
 on:
   push:
     branches: [ main, development ]
   pull_request:
-    branches: [ main, development ]
+    branches: [ main ]
 
 jobs:
   test:
@@ -22,3 +22,24 @@ jobs:
     - name: Run tests
       run: |
         python -m unittest test_py -v
+
+  automerge:
+    needs: test
+    if: github.ref == 'refs/heads/development' && success()
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup GitHub CLI
+      run: |
+        gh auth login --with-token <<< "${{ secrets.GITHUB_TOKEN }}"
+        
+    - name: Create and Merge PR
+      run: |
+        PR_URL=$(gh pr create --base main --head development --title "Auto PR: Development to Main" --body "Automatically created from development branch" --draft false)
+        PR_NUMBER=$(echo $PR_URL | grep -o '[0-9]\+$')
+        gh pr merge $PR_NUMBER --merge
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
