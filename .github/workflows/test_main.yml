@@ -1,51 +1,47 @@
-name: Python Tests and Auto PR
+name: Python Tests and Auto Merge
 
 on:
   push:
-    branches: [ main, development ]
+    branches: [main, development]
   pull_request:
-    branches: [ main, development ]
+    branches: [main]
 
 jobs:
   test:
     runs-on: ubuntu-latest
-    
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
-      
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
         python-version: '3.x'
-        
     - name: Run tests
       run: |
         python -m unittest test_py -v
 
-  create-pr:
+  automerge:
     needs: test
-    if: github.ref == 'refs/heads/development' && success()
+    if: github.ref == 'refs/heads/development' && needs.test.result == 'success'
     runs-on: ubuntu-latest
-    
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
-      
-    - name: Create Pull Request
-      uses: peter-evans/create-pull-request@v5
-      with:
-        token: ${{ secrets.GITHUB_TOKEN }}
-        commit-message: "Auto PR from development"
-        branch: development
-        base: main
-        title: "Auto PR: Merge development into main"
-        body: |
-          This PR was automatically created after tests passed successfully.
-          
-          Changes included:
-          - Added new print_reversed method
-          - All tests passing
-        labels: automated-pr, enhancement
-        reviewers: LagiParadox
-        assignees: LagiParadox
+      uses: actions/checkout@v4
+    - name: Setup GitHub CLI
+      run: |
+        gh auth login --with-token <<< "${{ secrets.GITHUB_TOKEN }}"
+    - name: Create and Merge PR
+      run: |
+        # Создаем PR
+        PR_URL=$(gh pr create --base main --head development --title "Auto PR: Development to Main" --body "Automatically created from development branch" --draft false)
+        echo "PR создан: $PR_URL"
+        
+        # Получаем номер PR
+        PR_NUMBER=$(echo $PR_URL | grep -o '[0-9]\+$')
+        echo "Номер PR: $PR_NUMBER"
+        
+        # Мержим PR
+        gh pr merge $PR_NUMBER --merge
+        echo "✅"
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
