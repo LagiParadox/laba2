@@ -35,6 +35,6 @@ class TestHelloWorldSender(unittest.TestCase):
         sys.stdout = sys.__stdout__
         output = captured_output.getvalue()
         self.assertIn("Test", output)
-            
+     
 if __name__ == '__main__':
     unittest.main()
