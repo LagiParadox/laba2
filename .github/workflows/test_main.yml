@@ -4,7 +4,7 @@ on:
   push:
     branches: [main, development]
   pull_request:
-    branches: [main]
+    branches: [main, development]
 
 jobs:
   test:
@@ -22,34 +22,29 @@ jobs:
 
   automerge:
     needs: test
-    if: github.ref == 'refs/heads/development'
+    if: |
+      (github.event_name == 'push' && github.ref == 'refs/heads/development') ||
+      (github.event_name == 'pull_request' && github.base_ref == 'main' && github.head_ref == 'development' && success())
     runs-on: ubuntu-latest
     steps:
-    - name: Debug info
-      run: |
-        echo "🎯 Debug информация:"
-        echo "GITHUB_REF: $GITHUB_REF"
-        echo "GITHUB_HEAD_REF: $GITHUB_HEAD_REF"
-        echo "GITHUB_BASE_REF: $GITHUB_BASE_REF"
-        echo "Event: ${{ github.event_name }}"
-        
     - name: Checkout code
       uses: actions/checkout@v4
-      
     - name: Setup GitHub CLI
       run: |
         gh auth login --with-token <<< "${{ secrets.GITHUB_TOKEN }}"
-        
     - name: Create and Merge PR
       run: |
-        echo "🔄 Создаем Pull Request..."
-        PR_URL=$(gh pr create --base main --head development --title "Auto PR: Development to Main" --body "Automatically created from development branch" --draft false)
-        echo "✅ PR создан: $PR_URL"
+        if [ "${{ github.event_name }}" == "push" ]; then
+          echo "🔄 Создаем Pull Request..."
+          PR_URL=$(gh pr create --base main --head development --title "Auto PR: Development to Main" --body "Automatically created from development branch" --draft false)
+          echo "✅ PR создан: $PR_URL"
+          PR_NUMBER=$(echo $PR_URL | grep -o '[0-9]\+$')
+        else
+          PR_NUMBER=${{ github.event.pull_request.number }}
+          echo "🔢 Используем существующий PR: $PR_NUMBER"
+        fi
         
-        PR_NUMBER=$(echo $PR_URL | grep -o '[0-9]\+$')
-        echo "🔢 Номер PR: $PR_NUMBER"
-        
-        echo "🔄 Мержим PR..."
+        echo "🔄 Мержим PR #$PR_NUMBER..."
         gh pr merge $PR_NUMBER --merge
         echo "✅"
       env:
