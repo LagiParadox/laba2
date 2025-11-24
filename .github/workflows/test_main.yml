@@ -1,19 +1,24 @@
-name: test_main
+name: Python Tests
 
 on:
   push:
     branches: [ main ]
+  pull_request:
+    branches: [ main ]
 
 jobs:
-  hello-world:
+  test:
     runs-on: ubuntu-latest
     
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
       
-    - name: Say Hello
-      run: echo "Hello, GitHub Actions! This is my first workflow!"
-      
-    - name: Show date
-      run: date
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.x'
+        
+    - name: Run tests
+      run: |
+        python -m unittest test_py -v
