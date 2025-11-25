@@ -35,6 +35,19 @@ class TestHelloWorldSender(unittest.TestCase):
         sys.stdout = sys.__stdout__
         output = captured_output.getvalue()
         self.assertIn("Test", output)
-        
+    def test_get_version(self):
+        sender = HelloWorldSender()
+        version_info = sender.get_version()
+        self.assertIn("HelloWorldSender v", version_info)
+
+    def test_print_info(self):
+        sender = HelloWorldSender("Test")
+        captured_output = io.StringIO()
+        sys.stdout = captured_output
+        sender.print_info()
+        sys.stdout = sys.__stdout__
+        output = captured_output.getvalue()
+        self.assertIn("HelloWorldSender", output)
+        self.assertIn("Текущее сообщение: Test", output)
 if __name__ == '__main__':
     unittest.main()
