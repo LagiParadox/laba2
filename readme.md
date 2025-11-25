@@ -8,7 +8,7 @@
 - Автоматическое тестирование
 - CI/CD пайплайн
 - Автоматические Pull Request
-    
+
 ## Использование
 ```python
 from py import HelloWorldSender
@@ -16,4 +16,4 @@ from py import HelloWorldSender
 sender = HelloWorldSender()
 sender.print_to_console()
 sender.print_rainbow()
-sender.print_info()
+sender.print_info() 
