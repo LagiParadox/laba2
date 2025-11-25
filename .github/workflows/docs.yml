@@ -1,0 +1,35 @@
+name: Documentation
+
+on:
+  push:
+    branches: [main, release]
+  release:
+    types: [published]
+
+jobs:
+  deploy-docs:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.x'
+    
+    - name: Generate documentation
+      run: |
+        echo "# Документация HelloWorldSender" > documentation.md
+        echo "## Версия: $(python -c 'from version import __version__; print(__version__)')" >> documentation.md
+        echo "## Описание" >> documentation.md
+        cat README.md >> documentation.md
+        echo "## Changelog" >> documentation.md
+        cat CHANGELOG.md >> documentation.md
+        echo "✅ Документация сгенерирована"
+    
+    - name: Upload documentation
+      uses: actions/upload-artifact@v3
+      with:
+        name: documentation
+        path: documentation.md
