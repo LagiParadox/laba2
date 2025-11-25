@@ -73,9 +73,9 @@ jobs:
           echo '```' >> documentation.md
           echo "" >> documentation.md
           echo "## Файлы проекта" >> documentation.md
-          echo "Список основных файлов:" >> documentation.md
+          echo "Содержимое репозитория:" >> documentation.md
           echo '```' >> documentation.md
-          ls -la *.py *.md *.yml 2>/dev/null || echo "Файлы не найдены" >> documentation.md
+          find . -type f -name "*.py" -o -name "*.md" -o -name "*.yml" | head -20 >> documentation.md
           echo '```' >> documentation.md
           echo "" >> documentation.md
           echo "## Статус" >> documentation.md
