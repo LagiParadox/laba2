@@ -22,30 +22,23 @@ jobs:
 
   automerge:
     needs: test
-    if: |
-      (github.event_name == 'push' && github.ref == 'refs/heads/development') ||
-      (github.event_name == 'pull_request' && github.base_ref == 'main' && github.head_ref == 'development' && success())
+    if: github.event_name == 'pull_request' && github.base_ref == 'main' && github.head_ref == 'development' && success()
     runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      contents: write
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-    - name: Setup GitHub CLI
-      run: |
-        gh auth login --with-token <<< "${{ secrets.GITHUB_TOKEN }}"
-    - name: Create and Merge PR
-      run: |
-        if [ "${{ github.event_name }}" == "push" ]; then
-          echo "🔄 Создаем Pull Request..."
-          PR_URL=$(gh pr create --base main --head development --title "Auto PR: Development to Main" --body "Automatically created from development branch" --draft false)
-          echo "✅ PR создан: $PR_URL"
-          PR_NUMBER=$(echo $PR_URL | grep -o '[0-9]\+$')
-        else
-          PR_NUMBER=${{ github.event.pull_request.number }}
-          echo "🔢 Используем существующий PR: $PR_NUMBER"
-        fi
+      - name: Checkout code
+        uses: actions/checkout@v4
         
-        echo "🔄 Мержим PR #$PR_NUMBER..."
-        gh pr merge $PR_NUMBER --merge
-        echo "✅"
-      env:
-        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Setup GitHub CLI
+        run: |
+          gh auth login --with-token <<< "${{ secrets.GITHUB_TOKEN }}"
+          
+      - name: Merge Pull Request
+        run: |
+          echo "🔄 Мержим PR #${{ github.event.pull_request.number }}..."
+          gh pr merge ${{ github.event.pull_request.number }} --merge --admin
+          echo "✅"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
