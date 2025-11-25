@@ -63,7 +63,12 @@ jobs:
           echo "## Сгенерировано: $(date)" >> documentation.md
           echo "## Версия проекта" >> documentation.md
           echo "\`\`\`" >> documentation.md
-          python -c "from version import __version__; print(f'Версия: {__version__}')" >> documentation.md
+          # Проверяем существует ли файл version.py
+          if [ -f "version.py" ]; then
+            python -c "from version import __version__; print(f'Версия: {__version__}')" >> documentation.md
+          else
+            echo "Версия: 1.0.0 (файл version.py не найден)" >> documentation.md
+          fi
           echo "\`\`\`" >> documentation.md
           echo "## Описание проекта" >> documentation.md
           if [ -f "README.md" ]; then
@@ -72,6 +77,11 @@ jobs:
             echo "README.md не найден" >> documentation.md
           fi
           echo "## История изменений" >> documentation.md
+          if [ -f "CHANGELOG.md" ]; then
+            cat CHANGELOG.md >> documentation.md
+          else
+            echo "CHANGELOG.md не найден" >> documentation.md
+          fi
           echo "## Статус CI/CD" >> documentation.md
           echo "![Тесты](https://github.com/${{ github.repository }}/actions/workflows/${{ github.workflow }}.yml/badge.svg)" >> documentation.md
           echo "Документация сгенерирована автоматически"
@@ -86,10 +96,3 @@ jobs:
           name: generated-docs
           path: documentation.md
           retention-days: 30
-      - name: Commit documentation
-        run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          git add documentation.md
-          git commit -m "docs: auto-generate documentation" || echo "No changes to commit"
-          git push
