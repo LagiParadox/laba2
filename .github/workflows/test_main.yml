@@ -60,16 +60,27 @@ jobs:
       - name: Generate documentation
         run: |
           echo "# Документация проекта" > documentation.md
-          echo "Версия: 1.0.0" >> documentation.md
-          echo "Дата: $(date)" >> documentation.md
+          echo "## Информация о сборке" >> documentation.md
+          echo "- Версия: 1.0.0" >> documentation.md
+          echo "- Дата сборки: $(date)" >> documentation.md
+          echo "- Коммит: ${{ github.sha }}" >> documentation.md
+          echo "- Ветка: ${{ github.ref_name }}" >> documentation.md
           echo "" >> documentation.md
-          echo "## Что сделано:" >> documentation.md
-          echo "- CI/CD пайплайн" >> documentation.md
-          echo "- Автотесты" >> documentation.md
-          echo "- Автомерж PR" >> documentation.md
-          echo "- Документация" >> documentation.md
+          echo "## Последние изменения" >> documentation.md
+          echo "Последние 3 коммита:" >> documentation.md
+          echo '```' >> documentation.md
+          git log --oneline -3 >> documentation.md
+          echo '```' >> documentation.md
           echo "" >> documentation.md
+          echo "## Файлы проекта" >> documentation.md
+          echo "Список основных файлов:" >> documentation.md
+          echo '```' >> documentation.md
+          ls -la *.py *.md *.yml 2>/dev/null || echo "Файлы не найдены" >> documentation.md
+          echo '```' >> documentation.md
+          echo "" >> documentation.md
+          echo "## Статус" >> documentation.md
           echo "Лабораторная работа завершена" >> documentation.md
+          echo "Документация обновляется автоматически при каждом изменении кода" >> documentation.md
       - name: Display documentation
         run: |
           echo "=== СГЕНЕРИРОВАННАЯ ДОКУМЕНТАЦИЯ ==="
