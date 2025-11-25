@@ -12,7 +12,7 @@ class TestHelloWorldSender(unittest.TestCase):
     def test_custom_message(self):
         sender = HelloWorldSender("Custom Message")
         self.assertEqual(sender.message, "Custom Message")
-    
+        
     def test_print_to_console(self):
         sender = HelloWorldSender("Test")
         captured_output = io.StringIO()
