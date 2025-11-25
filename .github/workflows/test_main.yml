@@ -1,24 +1,98 @@
-name: Python Tests
+name: CI/CD Pipeline with Documentation
 
 on:
   push:
-    branches: [ main, development ]
+    branches: [main, development, release]
   pull_request:
-    branches: [ main, development ]
+    branches: [main, development, release]
+  release:
+    types: [published]
 
 jobs:
   test:
     runs-on: ubuntu-latest
-    
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
-      
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
         python-version: '3.x'
-        
     - name: Run tests
       run: |
         python -m unittest test_py -v
+
+  automerge:
+    needs: test
+    if: github.event_name == 'pull_request' && github.base_ref == 'main' && github.head_ref == 'development' && success()
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      contents: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Setup GitHub CLI
+        run: |
+          gh auth login --with-token <<< "${{ secrets.GITHUB_TOKEN }}"
+      - name: Merge Pull Request
+        run: |
+          echo "Мержим #${{ github.event.pull_request.number }}..."
+          gh pr merge ${{ github.event.pull_request.number }} --merge --admin
+          echo "✅"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  documentation:
+    needs: test
+    if: |
+      github.event_name == 'push' && 
+      (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/release') ||
+      github.event_name == 'release'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+      - name: Generate documentation
+        run: |
+          echo "# Документация HelloWorldSender" > documentation.md
+          echo "## Сгенерировано: $(date)" >> documentation.md
+          echo "## Версия проекта" >> documentation.md
+          echo "\`\`\`" >> documentation.md
+          # Проверяем существует ли файл version.py
+          if [ -f "version.py" ]; then
+            python -c "from version import __version__; print(f'Версия: {__version__}')" >> documentation.md
+          else
+            echo "Версия: 1.0.0 (файл version.py не найден)" >> documentation.md
+          fi
+          echo "\`\`\`" >> documentation.md
+          echo "## Описание проекта" >> documentation.md
+          if [ -f "README.md" ]; then
+            cat README.md >> documentation.md
+          else
+            echo "README.md не найден" >> documentation.md
+          fi
+          echo "## История изменений" >> documentation.md
+          if [ -f "CHANGELOG.md" ]; then
+            cat CHANGELOG.md >> documentation.md
+          else
+            echo "CHANGELOG.md не найден" >> documentation.md
+          fi
+          echo "## Статус CI/CD" >> documentation.md
+          echo "![Тесты](https://github.com/${{ github.repository }}/actions/workflows/${{ github.workflow }}.yml/badge.svg)" >> documentation.md
+          echo "Документация сгенерирована автоматически"
+      - name: Display documentation
+        run: |
+          echo "=== СГЕНЕРИРОВАННАЯ ДОКУМЕНТАЦИЯ ==="
+          cat documentation.md
+          echo "=== КОНЕЦ ДОКУМЕНТАЦИИ ==="
+      - name: Upload documentation
+        uses: actions/upload-artifact@v4
+        with:
+          name: generated-docs
+          path: documentation.md
+          retention-days: 30

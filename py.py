@@ -1,11 +1,14 @@
 import time
 import random
+from version import __version__
 
 class HelloWorldSender:
     def __init__(self, message="Hello World"):
         self.message = message
         self.send_count = 0
-    
+        self.version = __version__
+    def get_version(self):
+        return f"HelloWorldSender v{self.version}"
     def print_to_console(self):
         print(self.message)
         self.send_count += 1
@@ -33,7 +36,11 @@ class HelloWorldSender:
     def surprise_mode(self):
         modes = [self.print_rainbow, self.print_animated, self.print_with_emojis]
         random.choice(modes)()
-
+    def print_info(self):
+        print(f"=== HelloWorldSender v{self.version} ===")
+        print("Проект для демонстрации CI/CD пайплайна")
+        print(f"Текущее сообщение: {self.message}")
+        print(f"Отправок выполнено: {self.send_count}")
 if __name__ == "__main__":
     sender = HelloWorldSender()
     
