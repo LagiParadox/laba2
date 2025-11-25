@@ -51,3 +51,4 @@ if __name__ == "__main__":
     
     print("\nСюрприз!")
     sender.surprise_mode()
+    
