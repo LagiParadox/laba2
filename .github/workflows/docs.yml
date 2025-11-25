@@ -1,4 +1,4 @@
-name: Documentation
+name: Deploy Documentation
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
     types: [published]
 
 jobs:
-  deploy-docs:
+  display-docs:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout code
@@ -21,15 +21,38 @@ jobs:
     - name: Generate documentation
       run: |
         echo "# Документация HelloWorldSender" > documentation.md
-        echo "## Версия: $(python -c 'from version import __version__; print(__version__)')" >> documentation.md
-        echo "## Описание" >> documentation.md
-        cat README.md >> documentation.md
-        echo "## Changelog" >> documentation.md
-        cat CHANGELOG.md >> documentation.md
-        echo "✅ Документация сгенерирована"
+        echo "## Сгенерировано: $(date)" >> documentation.md
+        echo "## Версия проекта" >> documentation.md
+        echo "```" >> documentation.md
+        python -c "from version import __version__; print(f'Версия: {__version__}')" >> documentation.md
+        echo "```" >> documentation.md
+        echo "## Описание проекта" >> documentation.md
+        if [ -f "README.md" ]; then
+          cat README.md >> documentation.md
+        else
+          echo "README.md не найден" >> documentation.md
+        fi
+        echo "## История изменений" >> documentation.md
+        if [ -f "CHANGELOG.md" ]; then
+          cat CHANGELOG.md >> documentation.md
+        else
+          echo "CHANGELOG.md не найден" >> documentation.md
+        fi
+        echo "## Структура проекта" >> documentation.md
+        echo "\`\`\`" >> documentation.md
+        find . -name "*.py" -o -name "*.md" -o -name "*.yml" | head -20 >> documentation.md
+        echo "\`\`\`" >> documentation.md
+        echo "Документация сгенерирована автоматически"
+    
+    - name: Display documentation
+      run: |
+        echo "=== СГЕНЕРИРОВАННАЯ ДОКУМЕНТАЦИЯ ==="
+        cat documentation.md
+        echo "=== КОНЕЦ ДОКУМЕНТАЦИИ ==="
     
     - name: Upload documentation
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
-        name: documentation
+        name: generated-docs
         path: documentation.md
+        retention-days: 30
