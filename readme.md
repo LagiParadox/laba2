@@ -8,7 +8,7 @@
 - Автоматическое тестирование
 - CI/CD пайплайн
 - Автоматические Pull Request
-
+    
 ## Использование
 ```python
 from py import HelloWorldSender
