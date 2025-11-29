@@ -52,10 +52,12 @@ jobs:
       with:
         python-version: '3.x'
         
-    - name: Generate pydoc
+    - name: Generate pydoc for all Python files
       run: |
         mkdir -p docs
-        python -m pydoc -w mymodule || true
+        find . -name "*.py" -not -path "./docs/*" | while read file; do
+          python -m pydoc -w "$file" || true
+        done
         mv *.html docs/ 2>/dev/null || true
         
     - name: Upload docs
