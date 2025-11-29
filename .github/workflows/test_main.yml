@@ -44,51 +44,22 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   documentation:
-    needs: test
-    if: |
-      github.event_name == 'push' && 
-      (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/release') ||
-      github.event_name == 'release'
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.x'
-      - name: Generate documentation
-        run: |
-          echo "# Документация проекта" > documentation.md
-          echo "## Информация о сборке" >> documentation.md
-          echo "- Версия: 1.0.0" >> documentation.md
-          echo "- Дата сборки: $(date)" >> documentation.md
-          echo "- Коммит: ${{ github.sha }}" >> documentation.md
-          echo "- Ветка: ${{ github.ref_name }}" >> documentation.md
-          echo "" >> documentation.md
-          echo "## Последние изменения" >> documentation.md
-          echo "Последние 3 коммита:" >> documentation.md
-          echo '```' >> documentation.md
-          git log --oneline -3 >> documentation.md
-          echo '```' >> documentation.md
-          echo "" >> documentation.md
-          echo "## Файлы проекта" >> documentation.md
-          echo "Содержимое репозитория:" >> documentation.md
-          echo '```' >> documentation.md
-          find . -type f -name "*.py" -o -name "*.md" -o -name "*.yml" | head -20 >> documentation.md
-          echo '```' >> documentation.md
-          echo "" >> documentation.md
-          echo "## Статус" >> documentation.md
-          echo "Лабораторная работа завершена" >> documentation.md
-          echo "Документация обновляется автоматически при каждом изменении кода" >> documentation.md
-      - name: Display documentation
-        run: |
-          echo "=== СГЕНЕРИРОВАННАЯ ДОКУМЕНТАЦИЯ ==="
-          cat documentation.md
-          echo "=== КОНЕЦ ДОКУМЕНТАЦИИ ==="
-      - name: Upload documentation
-        uses: actions/upload-artifact@v4
-        with:
-          name: generated-docs
-          path: documentation.md
-          retention-days: 30
+    - uses: actions/checkout@v4
+    
+    - uses: actions/setup-python@v4
+      with:
+        python-version: '3.x'
+        
+    - name: Generate pydoc
+      run: |
+        mkdir -p docs
+        python -m pydoc -w mymodule || true
+        mv *.html docs/ 2>/dev/null || true
+        
+    - name: Upload docs
+      uses: actions/upload-artifact@v4
+      with:
+        name: documentation
+        path: docs/
