@@ -2,6 +2,7 @@ import time
 import random
 from version import __version__
 
+
 class HelloWorldSender:
     def __init__(self, message="Hello World"):
         self.message = message
